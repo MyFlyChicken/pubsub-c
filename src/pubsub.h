@@ -20,6 +20,22 @@
 #define PS_QUEUE_BUCKET
 #endif
 
+#if !defined(PUBSUB_MALLOC)
+#define PUBSUB_MALLOC malloc
+#endif
+
+#if !defined(PUBSUB_CALLOC)
+#define PUBSUB_CALLOC calloc
+#endif
+
+#if !defined(PUBSUB_FREE)
+#define PUBSUB_FREE free
+#endif
+
+#if !defined(PUBSUB_ASSERT)
+#define PUBSUB_ASSERT(x) assert(x)
+#endif
+
 /**
  * @brief Flags associated to the message:
  * PS_FL_STICKY: Stores the las message sent to the topic and automatically publish it to new subscribers to that topic.
@@ -288,7 +304,7 @@ ps_subscriber_t *ps_new_subscriber(size_t queue_size, const ps_strlist_t subs);
 /**
  * @brief ps_free_subscriber frees all data from the subscriber, including message queue.
  *
- * @param s subscriber to free.
+ * @param s subscriber to PUBSUB_FREE.
  */
 void ps_free_subscriber(ps_subscriber_t *s);
 

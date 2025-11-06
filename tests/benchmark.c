@@ -51,7 +51,7 @@ void test2(void) {
 }
 
 void test3(size_t n) {
-	ps_subscriber_t **su = calloc(n, sizeof(ps_subscriber_t *));
+	ps_subscriber_t **su = PUBSUB_CALLOC(n, sizeof(ps_subscriber_t *));
 
 	for (size_t i = 0; i < n; i++) {
 		su[i] = ps_new_subscriber(100, PS_STRLIST("topic.a"));
@@ -67,7 +67,7 @@ void test3(size_t n) {
 }
 
 void test4(size_t n) {
-	ps_subscriber_t **su = calloc(n, sizeof(ps_subscriber_t *));
+	ps_subscriber_t **su = PUBSUB_CALLOC(n, sizeof(ps_subscriber_t *));
 
 	for (size_t i = 0; i < n; i++) {
 		su[i] = ps_new_subscriber(100, PS_STRLIST("topic.a"));
@@ -81,7 +81,7 @@ void test4(size_t n) {
 		ps_free_subscriber(su[i]);
 	}
 
-	free(su);
+	PUBSUB_FREE(su);
 }
 
 int main(int argc, char **argv) {

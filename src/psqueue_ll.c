@@ -15,9 +15,9 @@ struct ps_queue_s {
 };
 
 ps_queue_t *ps_new_queue(size_t sz) {
-	ps_queue_t *q = calloc(1, sizeof(ps_queue_t));
+	ps_queue_t *q = PUBSUB_CALLOC(1, sizeof(ps_queue_t));
 	q->size = sz;
-	q->messages = calloc(sz, sizeof(void *));
+	q->messages = PUBSUB_CALLOC(sz, sizeof(void *));
 	mutex_init(&q->mux);
 	semaphore_init(&q->not_empty, 0);
 
@@ -25,10 +25,10 @@ ps_queue_t *ps_new_queue(size_t sz) {
 }
 
 void ps_free_queue(ps_queue_t *q) {
-	free(q->messages);
+	PUBSUB_FREE(q->messages);
 	mutex_destroy(&q->mux);
 	semaphore_destroy(&q->not_empty);
-	free(q);
+	PUBSUB_FREE(q);
 }
 
 int ps_queue_push(ps_queue_t *q, ps_msg_t *msg, uint8_t priority) {

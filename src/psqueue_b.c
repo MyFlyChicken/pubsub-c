@@ -23,12 +23,12 @@ struct ps_queue_s {
 };
 
 ps_queue_t *ps_new_queue(size_t sz) {
-	ps_queue_t *q = calloc(1, sizeof(ps_queue_t));
+	ps_queue_t *q = PUBSUB_CALLOC(1, sizeof(ps_queue_t));
 	mutex_init(&q->mux);
 	semaphore_init(&q->not_empty, 0);
 
 	for (size_t i = 0; i < sz; i++) {
-		node_t *n = (node_t *) calloc(1, sizeof(node_t));
+		node_t *n = (node_t *) PUBSUB_CALLOC(1, sizeof(node_t));
 		DL_APPEND(q->available, n);
 	}
 
@@ -83,18 +83,18 @@ void ps_free_queue(ps_queue_t *q) {
 		DL_FOREACH_SAFE (q->priorities[i], n, e) {
 			ps_unref_msg(n->msg);
 			DL_DELETE(q->priorities[i], n);
-			free(n);
+			PUBSUB_FREE(n);
 		}
 	}
 
 	DL_FOREACH_SAFE (q->available, n, e) {
 		DL_DELETE(q->available, n);
-		free(n);
+		PUBSUB_FREE(n);
 	}
 
 	mutex_destroy(&q->mux);
 	semaphore_destroy(&q->not_empty);
-	free(q);
+	PUBSUB_FREE(q);
 }
 
 int ps_queue_push(ps_queue_t *q, ps_msg_t *msg, uint8_t priority) {

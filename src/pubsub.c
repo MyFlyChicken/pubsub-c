@@ -65,13 +65,13 @@ void ps_deinit(void) {
 
 static void ps_msg_free_value(ps_msg_t *msg) {
 	if (PS_IS_STR(msg)) {
-		free(msg->str_val);
+		PUBSUB_FREE(msg->str_val);
 	} else if (PS_IS_BUF(msg)) {
 		if (msg->buf_val.ptr && msg->buf_val.dtor) {
 			msg->buf_val.dtor(msg->buf_val.ptr);
 		}
 	} else if (PS_IS_ERR(msg)) {
-		free(msg->err_val.desc);
+		PUBSUB_FREE(msg->err_val.desc);
 	}
 
 	msg->flags = (msg->flags & ~PS_MSK_VALUE) | PS_NIL_TYP;
@@ -105,7 +105,7 @@ ps_msg_t *ps_new_msg(const char *topic, uint32_t flags, ...) {
 	if (topic == NULL)
 		return NULL;
 
-	ps_msg_t *msg = calloc(1, sizeof(ps_msg_t));
+	ps_msg_t *msg = PUBSUB_CALLOC(1, sizeof(ps_msg_t));
 
 	msg->_ref = 1;
 	msg->flags = flags;
@@ -126,7 +126,7 @@ ps_msg_t *ps_new_msg(const char *topic, uint32_t flags, ...) {
 
 ps_msg_t *ps_dup_msg(ps_msg_t const *msg_orig) {
 
-	ps_msg_t *msg = malloc(sizeof(ps_msg_t));
+	ps_msg_t *msg = PUBSUB_MALLOC(sizeof(ps_msg_t));
 	memcpy(msg, msg_orig, sizeof(ps_msg_t));
 	msg->_ref = 1;
 	msg->priority = msg_orig->priority;
@@ -142,9 +142,9 @@ ps_msg_t *ps_dup_msg(ps_msg_t const *msg_orig) {
 			msg->str_val = strdup(msg_orig->str_val);
 		}
 	} else if (PS_IS_BUF(msg_orig)) {
-		msg->buf_val.ptr = malloc(msg_orig->buf_val.sz);
+		msg->buf_val.ptr = PUBSUB_MALLOC(msg_orig->buf_val.sz);
 		memcpy(msg->buf_val.ptr, msg_orig->buf_val.ptr, msg_orig->buf_val.sz);
-		msg->buf_val.dtor = free;
+		msg->buf_val.dtor = PUBSUB_FREE;
 	} else if (PS_IS_ERR(msg_orig)) {
 		if (msg_orig->err_val.desc != NULL) {
 			msg->err_val.desc = strdup(msg_orig->err_val.desc);
@@ -156,7 +156,7 @@ ps_msg_t *ps_dup_msg(ps_msg_t const *msg_orig) {
 
 void ps_msg_set_topic(ps_msg_t *msg, const char *topic) {
 	if (msg->topic != NULL) {
-		free(msg->topic); // Free previous topic
+		PUBSUB_FREE(msg->topic); // Free previous topic
 		msg->topic = NULL;
 	}
 	if (topic != NULL) {
@@ -166,7 +166,7 @@ void ps_msg_set_topic(ps_msg_t *msg, const char *topic) {
 
 void ps_msg_set_rtopic(ps_msg_t *msg, const char *rtopic) {
 	if (msg->rtopic != NULL) {
-		free(msg->rtopic); // Free previous rtopic
+		PUBSUB_FREE(msg->rtopic); // Free previous rtopic
 		msg->rtopic = NULL;
 	}
 	if (rtopic != NULL) {
@@ -223,13 +223,13 @@ void ps_unref_msg(ps_msg_t *msg) {
 	if (msg == NULL)
 		return;
 	if (__sync_sub_and_fetch(&msg->_ref, 1) == 0) {
-		free(msg->topic);
+		PUBSUB_FREE(msg->topic);
 		if (msg->rtopic != NULL) {
-			free(msg->rtopic);
+			PUBSUB_FREE(msg->rtopic);
 		}
 		ps_msg_free_value(msg);
 
-		free(msg);
+		PUBSUB_FREE(msg);
 		__sync_sub_and_fetch(&stat_live_msg, 1);
 	}
 }
@@ -241,8 +241,8 @@ int ps_stats_live_msg(void) {
 static int free_topic_if_empty(topic_map_t *tm) {
 	if (tm->subscribers == NULL && tm->sticky == NULL) {
 		HASH_DEL(topic_map, tm);
-		free(tm->topic);
-		free(tm);
+		PUBSUB_FREE(tm->topic);
+		PUBSUB_FREE(tm);
 		return 1;
 	}
 	return 0;
@@ -250,7 +250,7 @@ static int free_topic_if_empty(topic_map_t *tm) {
 
 static topic_map_t *create_topic(const char *topic) {
 	topic_map_t *tm = NULL;
-	tm = calloc(1, sizeof(*tm));
+	tm = PUBSUB_CALLOC(1, sizeof(*tm));
 	tm->topic = strdup(topic);
 	HASH_ADD_KEYPTR(hh, topic_map, tm->topic, strlen(tm->topic), tm);
 	return tm;
@@ -307,7 +307,7 @@ static void push_child_sticky(ps_subscriber_t *su, const char *prefix, uint8_t p
 }
 
 ps_subscriber_t *ps_new_subscriber(size_t queue_size, const ps_strlist_t subs) {
-	ps_subscriber_t *su = calloc(1, sizeof(ps_subscriber_t));
+	ps_subscriber_t *su = PUBSUB_CALLOC(1, sizeof(ps_subscriber_t));
 	su->q = ps_new_queue(queue_size);
 	su->overflow = false;
 	ps_subscribe_many(su, subs);
@@ -319,7 +319,7 @@ void ps_free_subscriber(ps_subscriber_t *su) {
 	ps_unsubscribe_all(su);
 	ps_flush(su);
 	ps_free_queue(su->q);
-	free(su);
+	PUBSUB_FREE(su);
 	__sync_sub_and_fetch(&stat_live_subscribers, 1);
 }
 
@@ -436,13 +436,13 @@ int ps_subscribe_flags(ps_subscriber_t *su, const char *topic_orig, ps_sub_flags
 		ret = -1;
 		goto exit_fn;
 	}
-	sl = calloc(1, sizeof(*sl));
+	sl = PUBSUB_CALLOC(1, sizeof(*sl));
 	sl->su = su;
 	sl->hidden = hidden_flag;
 	sl->on_empty = on_empty_flag;
 	sl->priority = priority;
 	DL_APPEND(tm->subscribers, sl);
-	subs = calloc(1, sizeof(*subs));
+	subs = PUBSUB_CALLOC(1, sizeof(*subs));
 	subs->tm = tm;
 	DL_APPEND(su->subs, subs);
 	if (!no_sticky_flag) {
@@ -457,7 +457,7 @@ int ps_subscribe_flags(ps_subscriber_t *su, const char *topic_orig, ps_sub_flags
 
 exit_fn:
 	GLOBAL_UNLOCK
-	free(topic);
+	PUBSUB_FREE(topic);
 	return ret;
 }
 
@@ -485,17 +485,17 @@ int ps_unsubscribe(ps_subscriber_t *su, const char *otopic) {
 		goto exit_fn;
 	}
 	DL_DELETE(tm->subscribers, sl);
-	free(sl);
+	PUBSUB_FREE(sl);
 	free_topic_if_empty(tm);
 	DL_SEARCH_SCALAR(su->subs, subs, tm, tm);
 	if (subs != NULL) {
 		DL_DELETE(su->subs, subs);
-		free(subs);
+		PUBSUB_FREE(subs);
 	}
 
 exit_fn:
 	GLOBAL_UNLOCK
-	free(topic);
+	PUBSUB_FREE(topic);
 	return ret;
 }
 
@@ -522,12 +522,12 @@ int ps_unsubscribe_all(ps_subscriber_t *su) {
 		DL_SEARCH_SCALAR(s->tm->subscribers, sl, su, su);
 		if (sl != NULL) {
 			DL_DELETE(s->tm->subscribers, sl);
-			free(sl);
+			PUBSUB_FREE(sl);
 			free_topic_if_empty(s->tm);
 		}
 		ps = s;
 		s = s->next;
-		free(ps);
+		PUBSUB_FREE(ps);
 		count++;
 	}
 	su->subs = NULL;
@@ -635,7 +635,7 @@ int ps_publish(ps_msg_t *msg) {
 		}
 	}
 	ps_unref_msg(msg);
-	free(topic);
+	PUBSUB_FREE(topic);
 	GLOBAL_UNLOCK
 	return ret;
 }
@@ -671,7 +671,7 @@ int ps_subs_count(char *topic_) {
 			topic[n - 1] = 0;
 		}
 	}
-	free(topic);
+	PUBSUB_FREE(topic);
 	GLOBAL_UNLOCK
 	return count;
 }
