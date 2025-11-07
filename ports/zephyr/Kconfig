@@ -1,0 +1,29 @@
+menuconfig PUBSUB_C_ZEPHYR
+    bool "Enable Zephyr for PubSub-C"    
+    help
+        Enable the Zephyr-specific port of the PubSub-C library.
+
+    config PS_SYNC_ZEPHYR
+        bool 
+        default y
+        help
+            Use zephyr rtos.
+
+    config PS_QUEUE_CUSTOM
+        bool 
+        default y
+        help
+            Use a custom implementation of the psqueue communication method.
+
+    choice 
+        prompt "Select psqueue communication method"
+        default PS_QUEUE_BUCKET
+        config PS_QUEUE_BUCKET
+            bool "Support priorities"
+            help
+                Priority queue implemented with a bucket queue, using `-DPS_QUEUE_CUSTOM -DPS_QUEUE_BUCKET` (default)
+        config PS_QUEUE_LL
+            bool "Doesn't support priorities"
+            help
+                Linked list using `-DPS_QUEUE_CUSTOM -DPS_QUEUE_LL` which doesn't support priorities
+    endchoice
