@@ -13,28 +13,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "ps_config.h"
 
 //#define PS_USE_GETTIMEOFDAY // Use gettimeofday instead of monotonic clock_gettime
-
-#if !defined(PS_QUEUE_CUSTOM) && !defined(PS_QUEUE_BUCKET)
-#define PS_QUEUE_BUCKET
-#endif
-
-#if !defined(PUBSUB_MALLOC)
-#define PUBSUB_MALLOC malloc
-#endif
-
-#if !defined(PUBSUB_CALLOC)
-#define PUBSUB_CALLOC calloc
-#endif
-
-#if !defined(PUBSUB_FREE)
-#define PUBSUB_FREE free
-#endif
-
-#if !defined(PUBSUB_ASSERT)
-#define PUBSUB_ASSERT(x) assert(x)
-#endif
 
 /**
  * @brief Flags associated to the message:
