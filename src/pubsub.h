@@ -91,8 +91,8 @@ typedef struct ps_msg_s {
 	uint32_t flags;
 	int8_t priority;
 	union {
-		float dbl_val;
-		int32_t int_val;
+		double dbl_val;
+		int64_t int_val;
 		int bool_val;
 		void *ptr_val;
 		char *str_val;
