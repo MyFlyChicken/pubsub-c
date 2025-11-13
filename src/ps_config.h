@@ -25,31 +25,64 @@ extern "C" {
 #endif
 
 #if defined(PLATFORM_LINUX)
+#include <assert.h>
+#include <string.h>
 
 #define PUBSUB_MALLOC malloc
 #define PUBSUB_CALLOC calloc
 #define PUBSUB_FREE free
 #define PUBSUB_ASSERT(x) assert(x)
 
-#elseif defined(PLATFORM_FREERTOS)
+#elif defined(PLATFORM_FREERTOS)
 
 #define PUBSUB_MALLOC malloc
 #define PUBSUB_CALLOC calloc
 #define PUBSUB_FREE free
 #define PUBSUB_ASSERT(x) assert(x)
 
-#elseif defined(PLATFORM_RTTHREAD)
+#elif defined(PLATFORM_RTTHREAD)
 
 #define PUBSUB_MALLOC rt_malloc
 #define PUBSUB_CALLOC rt_calloc
 #define PUBSUB_FREE rt_free
 #define PUBSUB_ASSERT(x) rt_assert(x)
 
+#elif defined(PLATFORM_ZEPHYR) || defined(__ZEPHYR__) || defined(CONFIG_PUBSUB_C_ZEPHYR)
+#include <zephyr/kernel.h>
+
+#define PUBSUB_MALLOC k_malloc
+#define PUBSUB_CALLOC k_calloc
+#define PUBSUB_FREE k_free
+// 使用标准 assert，避免依赖私有断言宏
+#define PUBSUB_ASSERT(x) assert(x)
+
+#ifndef strdup
+// Zephyr 最小 libc 可能没有 strdup，这里提供一个兼容版本
+static inline char *ps_zephyr_strdup(const char *s) {
+	size_t n = strlen(s) + 1U;
+	char *p = k_malloc(n);
+	if (p) {
+		memcpy(p, s, n);
+	}
+	return p;
+}
+#define strdup ps_zephyr_strdup
+#endif // strdup
 #else
 
-#error "Please define a valid platform: PLATFORM_LINUX, PLATFORM_FREERTOS, PLATFORM_RTTHREAD"
+#include <assert.h>
+#include <string.h>
 
-#endif
+#define PUBSUB_MALLOC malloc
+#define PUBSUB_CALLOC calloc
+#define PUBSUB_FREE free
+#define PUBSUB_ASSERT(x) assert(x)
+
+// #warning
+// "Please define a valid platform: PLATFORM_LINUX, PLATFORM_FREERTOS, PLATFORM_RTTHREAD, PLATFORM_ZEPHYR,Now use
+// default malloc/free."
+
+#endif // PLATFORM_LINUX
 
 #ifdef __cplusplus
 }
