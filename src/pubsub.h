@@ -17,6 +17,10 @@
 
 //#define PS_USE_GETTIMEOFDAY // Use gettimeofday instead of monotonic clock_gettime
 
+#if !defined(PS_QUEUE_CUSTOM) && !defined(PS_QUEUE_BUCKET)
+#define PS_QUEUE_BUCKET
+#endif
+
 /**
  * @brief Flags associated to the message:
  * PS_FL_STICKY: Stores the las message sent to the topic and automatically publish it to new subscribers to that topic.
@@ -87,8 +91,8 @@ typedef struct ps_msg_s {
 	uint32_t flags;
 	int8_t priority;
 	union {
-		double dbl_val;
-		int64_t int_val;
+		float dbl_val;
+		int32_t int_val;
 		int bool_val;
 		void *ptr_val;
 		char *str_val;
