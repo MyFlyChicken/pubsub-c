@@ -2,12 +2,13 @@
 
 #ifdef PS_SYNC_ZEPHYR
 
+#include <assert.h>
 #include <zephyr/kernel.h>
 
 int mutex_init(mutex_t *_m) {
-	struct k_mutex **m = (struct k_mutex **) _m;
-	*m = k_malloc(sizeof(struct k_mutex));
-	return k_mutex_init(*m);
+	struct k_mutex *m = k_malloc(sizeof(struct k_mutex));
+	*_m = m;
+	return k_mutex_init(m);
 }
 
 int mutex_lock(mutex_t _m) {
@@ -25,9 +26,9 @@ void mutex_destroy(mutex_t *_m) {
 }
 
 int semaphore_init(semaphore_t *_s, unsigned int value) {
-	struct k_sem **s = (struct k_sem **) _s;
-	*s = k_malloc(sizeof(struct k_sem));
-	return k_sem_init(*s, value, value);
+	struct k_sem *s = k_malloc(sizeof(struct k_sem));
+	*_s = s;
+	return k_sem_init(s, value, UINT32_MAX);
 }
 
 int semaphore_wait(semaphore_t _s, int32_t timeout_ms) {
