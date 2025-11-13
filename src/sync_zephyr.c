@@ -22,7 +22,14 @@ int mutex_unlock(mutex_t _m) {
 }
 
 void mutex_destroy(mutex_t *_m) {
-	(void) _m;
+	struct k_mutex *m = (struct k_mutex *) *_m;
+	int ret = k_mutex_lock(m, K_NO_WAIT);
+	if (ret == 0) {
+		k_mutex_unlock(m);
+		k_free(m);
+	} else {
+		return;
+	}
 }
 
 int semaphore_init(semaphore_t *_s, unsigned int value) {
@@ -52,7 +59,10 @@ int semaphore_get(semaphore_t _s) {
 }
 
 void semaphore_destroy(semaphore_t *_s) {
-	(void) _s;
+	struct k_sem *s = (struct k_sem *) *_s;
+	if (0 == k_sem_count_get(s)) {
+		k_free(s);
+	}
 }
 
 #endif
